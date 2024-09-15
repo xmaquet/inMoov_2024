@@ -13,3 +13,6 @@ Mots-clés : architecture logicielle, InMoov, Odroïd N2, ROS2, IA, vision, webc
 
 Pour concevoir une architecture logicielle pour un robot humanoïde InMoov personnalisé, en utilisant un Odroid N2 et ROS2, nous devons prendre en compte plusieurs aspects clés : le matériel, les capteurs, les moteurs, les interfaces logicielles, et les modules d'intelligence artificielle. Voici une première ébauche de l'architecture logicielle que nous pouvons affiner au fur et à mesure.
 
+**Prérequis**
+
+**Étapes d'installation et de déploiement**
