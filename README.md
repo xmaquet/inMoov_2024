@@ -142,10 +142,6 @@ Pour automatiser la mise en place de l'environnement logiciel sur le Raspberry P
 - **Tests des Nœuds ROS2** : Lancer des tests de bout en bout pour vérifier que les nœuds sont fonctionnels, que la communication est établie entre eux et que les gestes sont bien exécutés.
 - **Mise en Place du Monitoring** : Installer des outils de supervision pour vérifier la consommation des ressources et assurer la stabilité du système.
 
----
-
-Cette architecture est une première base que nous pourrons affiner et ajuster en fonction des besoins évolutifs du projet. Quels aspects souhaitez-vous approfondir ou modifier à ce stade ?
-
 
 
 **Étapes d'installation et de déploiement**
