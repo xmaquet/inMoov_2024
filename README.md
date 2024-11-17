@@ -1,147 +1,47 @@
-# inMoov_wROS2
-Ce projet a été pensé comme un développement collaboratif avec une ... IA
+**Projet InMoov_wROS2 : Architecture logicielle et matérielle**
 
-J'ai travaillé dès le départ avec chatGPT 4.o, dans le but de gagner du temps et de produire un système de qualité.
+Le projet InMoov_wROS2 est un développement collaboratif, initié avec l'aide de ChatGPT, visant à créer une version personnalisée du robot humanoïde InMoov. Ce projet utilise ROS2 (Robot Operating System 2) pour gérer les différents composants du robot et a pour but de développer une plateforme évolutive, interactive, et capable de comprendre son environnement en temps réel.
 
-InMoov est un projet de robot humanoïde open-source ; mon projet est de le contrôler via ROS2 sur un Raspberry Pi5 (initialement un Odroïd N2, mais moins puissant). Ce robot intègre des fonctionnalités avancées telles que la vision par webcam avec reconnaissance faciale, un module d'IA pour l'interaction verbale, et un système de contrôle gestuel. Les actionneurs sont gérés par un MasterBrick Tinkerforge et des bricklets servos pour assurer des mouvements fluides et un contrôle fin des servos. Une interface web développée avec Django permet de surveiller et de contrôler le robot à distance. L'objectif est de créer une plateforme évolutive et interactive, capable de comprendre et de réagir à son environnement en temps réel.
+**Configuration Matérielle**
 
-**Description du projet :** 
+1. **ODROID N2 4G** : L'ODROID N2 est utilisé pour gérer les actionneurs du robot. Il est associé à un Brick Tinkerforge et deux Bricklets servos qui assurent le contrôle des moteurs des membres du robot (bras, mains, tête). Cela permet un contrôle fin et fluide des mouvements du robot. Les ESP32 et Arduino, précédemment envisagés, sont abandonnés pour la gestion des servos, mais restent des options pour d'autres fonctionnalités, telles que des jeux de lumières ou des capteurs PIR.
 
-*Tu vas m'aider à définir (dans un premier temps) une architecture logicielle qui permettra de mettre en œuvre une version personnelle du robot humanoïde InMoov. Je souhaite à terme l'installer sur un Raspberry Pi5 et utiliser ROS2 ; il faudra prévoir un module d'IA pour créer un personnage qui échangera avec le monde environnant ; il faudra gérer la vision avec une webcam et prévoir la reconnaissance faciale ; il y aura un module web pour la gestion des services. Commençons et affinons progressivement une version.*
+2. **Raspberry Pi 4 avec écran tactile** : Un Raspberry Pi 4 est couplé à un écran tactile et assure la connexion à un réseau Wi-Fi extérieur en jouant le rôle de routeur. Le Raspberry Pi 4 et l'ODROID N2 sont connectés en réseau local Ethernet, facilitant la communication entre les deux systèmes.
 
-Mots-clés : architecture logicielle, InMoov, Raspberry Pi5, ROS2, IA, vision, webcam, module web
+**Fonctionnalités du Robot**
 
-Pour concevoir une architecture logicielle pour un robot humanoïde InMoov personnalisé, en utilisant un Raspberry Pi5 et ROS2, nous devons prendre en compte plusieurs aspects clés : le matériel, les capteurs, les moteurs, les interfaces logicielles, et les modules d'intelligence artificielle. Voici une première ébauche de l'architecture logicielle que nous pouvons affiner au fur et à mesure.
+- **Contrôle des Actionneurs** : Le contrôle des servos est assuré par l'ODROID N2, avec un Master Brick Tinkerforge et deux Bricklets servos pour la gestion des membres (bras, mains, tête). Le nœud ROS2 correspondant, nommé `motor_controller_node`, permet d’envoyer les commandes de positionnement des articulations, ainsi que de suivre l’état des servos. Ce module gère également la calibration des servos et la mise en œuvre des séquences de mouvements prédéfinis.
 
-**Architecture logicielle pour un robot humanoïde InMoov personnalisé**
+- **Vision et Reconnaissance Faciale** : Le robot est équipé d'une webcam connectée à l'ODROID N2, permettant la vision en temps réel. Un module ROS2 spécifique, nommé `vision_node`, est chargé de l'acquisition d'images, de la détection et de la reconnaissance faciale. Ce nœud envoie des informations de suivi des visages et des objets à d'autres nœuds ROS2, permettant au robot d'interagir dynamiquement avec son environnement.
 
-Pour concevoir une version personnalisée du robot humanoïde InMoov avec un Raspberry Pi 5 et ROS2, nous devons structurer l'architecture logicielle en différents modules, chacun remplissant un rôle précis. Voici une ébauche initiale que nous pourrons affiner au fil du développement.
+- **Interaction Verbale** : Un module d'intelligence artificielle est intégré pour la gestion du dialogue avec les humains. Ce module ROS2, nommé `ai_node`, s'appuie sur un modèle NLP (comme GPT) pour comprendre et générer des réponses, adaptant son comportement en fonction des situations. Ce nœud coordonne également les interactions avec d'autres nœuds, comme le `gesture_control_node`, pour rendre les échanges plus immersifs.
 
-### 1. Base de l'Architecture : ROS2
+- **Contrôle Gestuel** : Le robot possède une gestuelle prédéfinie, avec la possibilité de créer de nouveaux gestes via une interface web. Le nœud ROS2 correspondant, nommé `gesture_control_node`, est responsable de l'animation des mouvements complexes des bras, des mains, et de la tête. Il intègre une bibliothèque de gestes prédéfinis (salutations, pointages, hochements de tête, etc.) et peut également générer des gestes contextuels en fonction des informations fournies par le `vision_node` et le `ai_node`.
 
-ROS2 (Robot Operating System 2) sera le cadre principal qui gère la communication entre les différents composants du robot. Chaque fonctionnalité sera organisée sous forme de nœuds ROS2, facilitant ainsi le développement, la modularité et la maintenance.
+- **Interface Web** : Une interface web, développée avec Django, est déployée sur le Raspberry Pi 4. Cette interface est gérée par un nœud ROS2 nommé `web_interface_node`. Elle permet la surveillance et le contrôle à distance du robot, y compris la création de nouveaux gestes et la gestion des paramètres des différents modules. L'interface fournit également une visualisation en temps réel des données du robot, comme le flux vidéo et les positions des moteurs.
 
-### 2. Modules de Base
+**Communication et Synchronisation**
 
-#### 2.1 Module de Contrôle des Moteurs
-- **Nœud ROS2 : `motor_controller_node`**
-- **Matériel** : Utilisation d'un Brick Tinkerforge et de bricklets dédiés servos pour interfacer les servomoteurs.
-- **Fonctions** :
-  - Contrôle des moteurs des membres (bras, mains, tête).
-  - Gestion des servos via des messages de type `sensor_msgs/JointState` pour indiquer les positions des articulations.
-  - Calibration des servos et retour d'état des positions actuelles.
-  - **Master Brick 3.2** : Le Master Brick 3.2 est utilisé pour interfacer les Bricklets dédiés aux servos. Il communique avec le Raspberry Pi 5 via USB, permettant le contrôle des servomoteurs et la gestion des retours d'état. Le `motor_controller_node` communique avec le Master Brick pour transmettre les commandes aux servos, simplifiant ainsi la gestion des actionneurs du robot.
-  - **Gestion de la Gestuelle** : La gestuelle est cruciale pour rendre le robot plus interactif. Le `motor_controller_node` gérera des séquences de mouvements prédéfinies (comme des gestes de salutation ou des actions expressives) pour améliorer les interactions humaines. Ces séquences seront déclenchées soit automatiquement via le module d'IA, soit manuellement via l'interface web.
+La communication entre les nœuds ROS2 (`motor_controller_node`, `vision_node`, `ai_node`, `gesture_control_node`, `web_interface_node`) est gérée par des topics, services, et actions ROS2. Par exemple, le `vision_node` transmet les détections de visages au `ai_node`, qui peut alors déclencher des interactions verbales et gestuelles appropriées. La synchronisation entre les modules permet de coordonner les gestes et le dialogue du robot en réponse aux événements détectés en temps réel.
 
-### 2.2 Module de Gestion de la Gestuelle
+**Système d’Exploitation**
 
-#### 2.2.1 Nœud ROS2 : `gesture_control_node`
-- **Fonctions** :
-  - **Contrôle de la gestuelle** : Ce nœud est responsable de l'animation des mouvements complexes des bras, des mains, et de la tête pour exprimer des gestes. Par exemple, des mouvements de salutation, des pointages d'objets, ou des expressions non verbales comme un hochement de tête.
-  - **Prédéfinition des gestes** : Stocker et gérer une bibliothèque de gestes prédéfinis, chaque geste étant associé à une séquence spécifique de mouvements des articulations.
-  - **Gestes dynamiques** : Capacité à générer des gestes dynamiques en fonction du contexte, par exemple, pointer vers un objet détecté par le module de vision.
+Le système tourne sur Ubuntu Server 22.04 LTS, optimisé pour ROS2. Docker est utilisé pour conteneuriser certains services, simplifiant le déploiement, la maintenance, et la mise à jour des différents composants du système.
 
-#### 2.2.2 Bibliothèque de Gestes
-- **2.2.2.1 Gestes Prédéfinis**
-  - Création d'une bibliothèque de gestes avec des séquences prédéfinies pour les actions courantes comme :
-    - Saluer
-    - Montrer ou pointer
-    - Applaudir
-    - Hausser les épaules
-    - Lever la tête pour montrer de l'attention
-- **2.2.2.2 Création de Nouveaux Gestes**
-  - Interface pour ajouter de nouveaux gestes via le module Web (`web_interface_node`), permettant aux utilisateurs de créer et personnaliser des gestes en spécifiant les séquences de mouvements.
+**Avantages et Inconvénients de Docker**
 
-#### 2.2.3 Intégration avec le `ai_node`
-Le `gesture_control_node` est étroitement intégré avec le `ai_node`. Lorsqu'une interaction verbale se produit, le `ai_node` peut déclencher des gestes pour accompagner les paroles du robot.
-- **Exemple** : Si le robot dit "Salut !", il pourrait automatiquement lever la main en même temps pour saluer.
+- **Avantages** :
+  - **Isolation des Services** : Docker permet d'isoler chaque service (comme l'IA, la vision, ou l'interface web) dans des conteneurs distincts, évitant ainsi les conflits de dépendances et améliorant la stabilité globale du système.
+  - **Facilité de Déploiement** : Grâce à Docker, chaque composant peut être déployé de manière indépendante, rendant le système plus modulable et simplifiant la mise à jour des différentes parties sans perturber l'ensemble.
+  - **Portabilité** : Les conteneurs Docker peuvent être facilement déployés sur d'autres machines, facilitant le partage du projet et sa reproductibilité pour d'autres développeurs ou utilisateurs.
+  - **Gestion des Versions** : Docker permet de garder différentes versions des conteneurs, rendant possible le retour à une version précédente en cas de problème avec une mise à jour.
 
-#### 2.2.4 Interaction avec le `vision_node`
-Le `gesture_control_node` peut aussi réagir aux informations du `vision_node`, par exemple, en détectant un visage humain, le robot pourrait automatiquement lever la main pour saluer ou se tourner vers la personne.
-- **Suivi des objets** : Le robot pourrait suivre des objets ou des visages en utilisant à la fois le contrôle des moteurs et la gestuelle.
+- **Inconvénients** :
+  - **Consommation de Ressources** : Bien que Docker soit plus léger que les machines virtuelles, l'exécution de plusieurs conteneurs peut tout de même consommer une quantité importante de ressources, ce qui peut être critique sur un appareil comme le Raspberry Pi.
+  - **Complexité Supplémentaire** : L'ajout de Docker ajoute une couche supplémentaire de complexité, nécessitant une certaine expertise pour la gestion des conteneurs, la configuration réseau, et la sécurité.
+  - **Accès Matériel** : L'accès direct à certains périphériques matériels peut être plus compliqué depuis un conteneur Docker, nécessitant des configurations spécifiques pour permettre l'accès aux périphériques USB ou aux caméras, par exemple.
 
-### 2.3 Module de Vision
-- **Nœud ROS2 : `vision_node`**
-- **Matériel** : Webcam connectée au Raspberry Pi 5.
-- **Fonctions** :
-  - Acquisition d'images en temps réel.
-  - Détection et reconnaissance d'objets grâce à des modèles d'IA.
-  - Sous-module de reconnaissance faciale pour identifier et suivre les visages.
+**Objectif**
 
-### 2.4 Module d'Intelligence Artificielle
-- **Nœud ROS2 : `ai_node`**
-- **Fonctions** :
-  - Gestion du personnage : dialogue et interaction avec les humains.
-  - Utilisation d'un modèle NLP (par exemple, GPT) pour comprendre et générer des réponses.
-  - Adaptation aux situations contextuelles et apprentissage continu basé sur les interactions avec les utilisateurs.
-  - Coordination avec le `motor_controller_node` et le `gesture_control_node` pour déclencher des gestes appropriés lors des interactions (par exemple, saluer lorsqu'une personne est détectée).
+L'objectif de ce projet est de créer une plateforme évolutive, capable d'interagir avec son environnement en temps réel, d'apprendre des échanges avec les humains et de réaliser des tâches variées, qu'il s'agisse de gestuelle, d'expressions verbales, ou de réactions aux stimuli de l'environnement. Le projet est conçu pour être accessible et modulaire, permettant des évolutions futures tant au niveau logiciel que matériel.
 
-### 2.5 Module Web
-- **Nœud ROS2 : `web_interface_node`**
-- **Framework** : Django
-- **Fonctions** :
-  - Interface web pour la gestion des paramètres du robot (moteurs, vision, IA).
-  - Serveur web embarqué sur le Raspberry Pi 5 pour accéder aux données et configurations à distance.
-  - Visualisation en temps réel des données (flux vidéo, positions des moteurs, état du système).
-  - **Création de Nouveaux Gestes** : Permet aux utilisateurs de créer et personnaliser de nouveaux gestes en spécifiant des séquences de mouvements via l'interface web.
-
-### 3. Communication entre les Modules
-La communication entre les nœuds sera gérée par ROS2 à l'aide de topics, services et actions. Par exemple, le `vision_node` enverra des informations sur les visages détectés au `ai_node` pour permettre une interaction personnalisée avec les humains. De même, l'`ai_node` pourra envoyer des commandes au `motor_controller_node` et au `gesture_control_node` pour déclencher des mouvements gestuels spécifiques.
-
-### 4. Gestion des Capteurs
-- **Capteurs** :
-  - Capteurs de proximité (ultrasons, infrarouges) pour la détection d'obstacles.
-  - Microphones pour la reconnaissance vocale.
-- Chaque capteur sera géré par un nœud ROS2 spécifique qui transmettra les données pertinentes aux autres modules.
-
-### 5. Gestion de la Performance
-Pour optimiser l'utilisation du Raspberry Pi 5, nous utiliserons des modèles IA légers (comme TensorFlow Lite) et veillerons à limiter la consommation des ressources par les nœuds ROS2. L'objectif est de maintenir un équilibre entre fonctionnalité et efficacité.
-- **Système d'exploitation recommandé** : Utilisation d'**Ubuntu Server 22.04 LTS** sur le Raspberry Pi 5. Ubuntu Server est optimisé pour les projets ROS2, offrant une grande compatibilité et des performances stables, notamment avec les versions ROS2 Humble et Rolling. Ubuntu permet également l'utilisation de Docker pour une gestion simplifiée des nœuds et des conteneurs.
-
-### 6. Déploiement et Maintenance
-- **Conteneurisation** : Utilisation de Docker pour conteneuriser les nœuds afin de simplifier le déploiement et la gestion des versions.
-- **Surveillance** : Mise en place de mécanismes de logging et de monitoring pour superviser le fonctionnement du robot en temps réel.
-
-### 7. Script d'Installation
-Pour automatiser la mise en place de l'environnement logiciel sur le Raspberry Pi 5, nous décrivons un script d'installation structuré en plusieurs phases :
-
-#### 7.1 Préparation du Système
-- **Mise à jour du Système** : Mettre à jour les packages pour garantir la stabilité.
-- **Installation des Dépendances** : Installer des outils de développement de base (Python, Docker, etc.).
-- **Configuration du Réseau** : Paramétrer l'accès réseau pour permettre les téléchargements et les mises à jour.
-
-#### 7.2 Installation de ROS2 (Humble)
-- **Ajout des clés et des dépôts APT** : Ajouter les sources nécessaires pour installer ROS2 Humble.
-- **Installation de ROS2** : Installer les composants principaux de ROS2, incluant les outils de développement (`colcon`, `rosdep`).
-- **Configuration de ROS2** : Créer un espace de travail ROS2, configurer `rosdep`, et installer les dépendances.
-
-#### 7.3 Installation des Composants Tinkerforge
-- **Téléchargement des Bibliothèques Tinkerforge** : Installer les bibliothèques Python nécessaires.
-- **Configuration du Master Brick** : Tester la communication avec les Bricklets.
-
-#### 7.4 Déploiement des Nœuds ROS2
-- **Clonage des Repositories** : Cloner le code du projet pour chaque nœud.
-- **Compilation du Code** : Compiler les nœuds ROS2 en utilisant `colcon build`.
-- **Configuration des Lancements** : Créer des fichiers de lancement pour démarrer les nœuds.
-
-#### 7.5 Installation de Docker
-- **Installation de Docker** : Installer Docker pour la conteneurisation des modules.
-- **Création des Conteneurs** : Créer des images Docker pour chaque nœud, si nécessaire, pour permettre une gestion plus souple et une mise à jour simplifiée des versions.
-
-#### 7.6 Installation du Serveur Web (Django)
-- **Installation de Python et Django** : Installer Python 3 et le framework Django.
-- **Déploiement du Module Web** : Créer l'interface pour la gestion des paramètres et la création de nouveaux gestes.
-- **Configuration des Permissions** : S'assurer que le serveur web peut accéder aux fichiers nécessaires et communiquer avec les autres nœuds.
-
-#### 7.7 Configuration des Services de Démarrage
-- **Création de Services Système** : Créer des services (`systemd`) pour démarrer automatiquement les nœuds ROS2, le serveur Django, et d'autres processus critiques lors du démarrage du Raspberry Pi.
-- **Test de l’Autonomie** : Tester le redémarrage automatique pour vérifier que l'ensemble du système est opérationnel après un cycle d'arrêt/redémarrage.
-
-#### 7.8 Tests et Validation
-- **Tests de Communication** : Valider la communication entre le Raspberry Pi et les Bricks Tinkerforge.
-- **Tests des Nœuds ROS2** : Lancer des tests de bout en bout pour vérifier que les nœuds sont fonctionnels, que la communication est établie entre eux et que les gestes sont bien exécutés.
-- **Mise en Place du Monitoring** : Installer des outils de supervision pour vérifier la consommation des ressources et assurer la stabilité du système.
-
-
-
-**Étapes d'installation et de déploiement**
